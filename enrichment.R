@@ -12,8 +12,6 @@ gene_set_enrichment <- function(genes, universe, type, pvalueCutoff, qvalueCutof
     out <- enrichDO(genes, universe=universe, pvalueCutoff=pvalueCutoff, qvalueCutoff=qvalueCutoff)
   } else if(type == "disgenet") {
     out <- enrichDGN(genes, universe=universe, pvalueCutoff=pvalueCutoff, qvalueCutoff=qvalueCutoff)
-  } else if(type == "ncg") {
-    out <- enrichNCG(genes, universe=universe, pvalueCutoff=pvalueCutoff, qvalueCutoff=qvalueCutoff)
   }
   return(out)
 }
@@ -24,7 +22,14 @@ gene_set_enrichment_types <- function() {
     "GO Molecular function" = "gomf",
     "GO Cellular component" = "gocc",
     "Disease Ontology" = "do",
-    "DisGeNET" = "disgenet",
-    "Network of Cancer Genes" = "ncg"
+    "DisGeNET" = "disgenet"
   )
+}
+
+gene_set_enrichment_get_links <- function(ids, type) {
+  if(type == "gobp" || type == "gomf" || type == "gocc") {
+    sapply(ids, function(x) sprintf("<a href=\"http://amigo.geneontology.org/amigo/term/%s\" target=\"_blank\">%s</a>", x, x))
+  } else if(type == "do") {
+    sapply(ids, function(x) sprintf("<a href=\"http://disease-ontology.org/term/%s\" target=\"_blank\">%s</a>", x, x))
+  }
 }
