@@ -30,12 +30,13 @@ gene_set_enrichment_types <- function() {
   )
 }
 
-gene_set_enrichment_get_links <- function(ids, type) {
+gene_set_enrichment_get_links <- function(D, type) {
   if(type == "gobp" || type == "gomf" || type == "gocc") {
-    sapply(ids, function(x) sprintf("<a href=\"http://amigo.geneontology.org/amigo/term/%s\" target=\"_blank\">%s</a>", x, x))
+    D[[1]] <- sapply(D[[1]], function(x) sprintf("<a href=\"http://amigo.geneontology.org/amigo/term/%s\" target=\"_blank\">%s</a>", x, x))
   } else if(type == "reactome") {
-    sapply(ids, function(x) sprintf("<a href=\"https://reactome.org/content/detail/%s\" target=\"_blank\">%s</a>", x, x))
+    D[[1]] <- sapply(D[[1]], function(x) sprintf("<a href=\"https://reactome.org/content/detail/%s\" target=\"_blank\">%s</a>", x, x))
   } else if(type == "do") {
-    sapply(ids, function(x) sprintf("<a href=\"http://disease-ontology.org/term/%s\" target=\"_blank\">%s</a>", x, x))
+    D[[1]] <- sapply(D[[1]], function(x) sprintf("<a href=\"http://disease-ontology.org/term/%s\" target=\"_blank\">%s</a>", x, x))
   }
+  return(D)
 }
