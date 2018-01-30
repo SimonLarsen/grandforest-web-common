@@ -20,7 +20,6 @@ feature_graph <- function(D, edges, features, labels, groups) {
   edges <- subset(edges, from %in% features & to %in% features)
 
   net <- visNetwork(nodes, edges, footer=footer) %>%
-    visPhysics(solver = "forceAtlas2Based") %>%
     visNodes(shape = "ellipse") %>%
     visEdges(smooth = FALSE, color = list(color = "lightblue", highlight="black")) %>%
     visIgraphLayout()
