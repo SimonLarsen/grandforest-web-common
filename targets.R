@@ -1,16 +1,16 @@
 get_gene_targets <- function(genes, type) {
-  if(type == "ttd") {
-    D <- readRDS("grandforest-web-common/data/ttd.rds")
-    out <- subset(D, gene %in% genes)
+  if(type == "drugbank") {
+    subset(readRDS("grandforest-web-common/data/drugbank.rds"), gene %in% genes)
+  } else if(type == "ttd") {
+    subset(readRDS("grandforest-web-common/data/ttd.rds"), gene %in% genes)
   } else if(type == "mirtarbase") {
-    D <- readRDS("grandforest-web-common/data/mirtarbase.human.rds")
-    out <- subset(D, gene %in% genes)
+    subset(readRDS("grandforest-web-common/data/mirtarbase.human.rds"), gene %i% genes)
   }
-  return(out)
 }
 
 gene_target_sources <- function() {
   list(
+    "DrugBank 5.0.11 (drugs)" = "drugbank",
     "Therapeutic Target Database (drugs)" = "ttd",
     "miRTarBase 7.0 (miRNA)" = "mirtarbase"
   )
@@ -26,6 +26,7 @@ get_pubmed_links <- function(x) {
 get_gene_target_links <- function(D, type) {
   make_links <- function(ids, type) {
     link <- switch(type,
+      drugbank = "https://www.drugbank.ca/drugs/%s",
       ttd = "https://db.idrblab.org/ttd/drug/%s",
       pubchem = "https://pubchem.ncbi.nlm.nih.gov/compound/%s",
       mirtarbase = "http://mirtarbase.mbc.nctu.edu.tw/php/detail.php?mirtid=%s"
@@ -34,7 +35,9 @@ get_gene_target_links <- function(D, type) {
     sapply(ids, function(x) if(is.na(x)) NA else sprintf(fmt, x, x))
   }
 
-  if(type == "ttd") {
+  if(type == "drugbank") {
+    D[[1]] <- make_links(D[[1]], "drugbank")
+  } else if(type == "ttd") {
     D[[1]] <- make_links(D[[1]], "ttd")
     D[[4]] <- make_links(D[[4]], "pubchem")
   } else if(type == "mirtarbase") {
