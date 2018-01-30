@@ -30,13 +30,23 @@ gene_set_enrichment_types <- function() {
   )
 }
 
-gene_set_enrichment_get_links <- function(D, type) {
+get_gene_set_enrichment_links <- function(D, type) {
+  make_links <- function(ids, type) {
+    link <- switch(type,
+      amigo = "http://amigo.geneontology.org/amigo/term/%s",
+      reactome = "https://reactome.org/content/detail/%s",
+      do = "http://disease-ontology.org/term/%s"
+    )
+    fmt <- sprintf("<a href=\"%s\" target=_blank>%%s</a>", link)
+    sapply(ids, function(x) if(is.na(x)) NA else sprintf(fmt, x, x))
+  }
+  
   if(type == "gobp" || type == "gomf" || type == "gocc") {
-    D[[1]] <- sapply(D[[1]], function(x) sprintf("<a href=\"http://amigo.geneontology.org/amigo/term/%s\" target=\"_blank\">%s</a>", x, x))
+    D[[1]] <- make_links(D[[1]], "amigo")
   } else if(type == "reactome") {
-    D[[1]] <- sapply(D[[1]], function(x) sprintf("<a href=\"https://reactome.org/content/detail/%s\" target=\"_blank\">%s</a>", x, x))
+    D[[1]] <- make_links(D[[1]], "reactome")
   } else if(type == "do") {
-    D[[1]] <- sapply(D[[1]], function(x) sprintf("<a href=\"http://disease-ontology.org/term/%s\" target=\"_blank\">%s</a>", x, x))
+    D[[1]] <- make_links(D[[1]], "do")
   }
   return(D)
 }
