@@ -4,7 +4,7 @@ get_gene_targets <- function(genes, type) {
   } else if(type == "ttd") {
     subset(readRDS("grandforest-web-common/data/ttd.rds"), gene %in% genes)
   } else if(type == "mirtarbase") {
-    subset(readRDS("grandforest-web-common/data/mirtarbase.human.rds"), gene %i% genes)
+    subset(readRDS("grandforest-web-common/data/mirtarbase.human.rds"), gene %in% genes)
   }
 }
 
