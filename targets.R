@@ -54,7 +54,7 @@ get_gene_target_links <- function(D, type) {
     D[[4]] <- make_links(D[[4]], "pubchem_cid")
     D[[5]] <- make_links_list(D[[5]], "pubchem_sid")
   } else if(type == "mirtarbase") {
-    D[[1]] <- make_links(D[[1]], "mirtarbase")
+    D[[2]] <- make_links(D[[2]], "mirtarbase")
     D[[4]] <- make_links_list(D[[4]], "pubmed")
   }
   return(D)
