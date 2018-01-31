@@ -82,6 +82,6 @@ get_targets_network <- function(targets, show_symbols) {
 
   visNetwork(nodes, edges) %>%
     visNodes(shape = "ellipse") %>%
-    visEdges(smooth = FALSE) %>%
+    visEdges(smooth = FALSE, arrows="from") %>%
     visIgraphLayout()
 }
