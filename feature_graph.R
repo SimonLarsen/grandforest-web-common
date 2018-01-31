@@ -10,11 +10,14 @@ feature_graph <- function(D, edges, features, labels, groups) {
 
   if(length(group_levels) == 2) {
     means <- lapply(split(D, groups), colMeans)
-    colors <- colorRamp2(c(-1,0,1), c("magenta","white","green"))(means[[1]] - means[[2]])
+    col_ramp <- colorRamp2(c(-1,0,1), c("magenta","white","green"))
+    colors <- col_ramp(means[[1]] - means[[2]])
     nodes$color.background <- colors
     
     footer <- paste0("Node color is mean(", group_levels[1], ") - mean(", group_levels[2], ")")
-    legend_nodes <- data.frame(id=1:3, label=c(-1, 0, 1), shape="ellipse", color.background=c("magenta", "white", "green"), color.border="black")
+    legend_values <- c(-1, -0.5, 0, 0.5, 1.0)
+    legend_labels <- c("-1.0 ", "-0.5 ", " 0.0 ", " 0.5 ", " 1.0 ")
+    legend_nodes <- data.frame(id=1:5, label=legend_labels, color.background=col_ramp(legend_values), color.border="black", shape="box")
   }
   
   edges <- subset(edges, from %in% features & to %in% features)
