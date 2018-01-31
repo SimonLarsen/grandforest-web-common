@@ -1,3 +1,6 @@
+library(visNetwork)
+source("grandforest-web-common/mapping.R")
+
 get_gene_targets <- function(genes, type) {
   if(type == "drugbank") {
     subset(readRDS("grandforest-web-common/data/drugbank.rds"), gene %in% genes)
@@ -45,4 +48,31 @@ get_gene_target_links <- function(D, type) {
     D[[4]] <- sapply(D[[4]], get_pubmed_links)
   }
   return(D)
+}
+
+get_targets_network <- function(targets, show_symbols) {
+  gene_col <- which(colnames(targets) == "gene")
+  edges <- targets[,c(1,gene_col)]
+  colnames(edges) <- c("from","to")
+
+  from_nodes <- unique(edges$from)
+  to_nodes <- unique(edges$to)
+  to_labels <- if(show_symbols) map_ids_fallback(to_nodes, "SYMBOL", "ENTREZID") else to_nodes
+
+  nodes <- data.frame(
+    id = c(from_nodes, to_nodes),
+    label = c(from_nodes, to_labels),
+    color.background = c(rep("lightblue", length(from_nodes)), rep("#f18484", length(to_nodes))),
+    stringsAsFactors = FALSE
+  )
+
+  validate(need(
+    nrow(nodes) <= MAX_TARGET_NETWORK_NODES,
+    sprintf("Gene target network not supported for > %d nodes.", MAX_TARGET_NETWORK_NODES)
+  ))
+
+  visNetwork(nodes, edges) %>%
+    visNodes(shape = "ellipse") %>%
+    visEdges(smooth = FALSE) %>%
+    visIgraphLayout()
 }
