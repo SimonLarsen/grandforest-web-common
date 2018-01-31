@@ -19,50 +19,59 @@ gene_target_sources <- function() {
   )
 }
 
-get_pubmed_links <- function(x) {
-  if(is.na(x)) return(NA)
-  ids <- unlist(strsplit(x, ","))
-  links <- sapply(ids, function(x) sprintf("<a href=\"https://www.ncbi.nlm.nih.gov/pubmed/?term=%s\" target=\"_blank\">%s</a>", x, x))
-  paste(links, collapse=", ")
-}
-
 get_gene_target_links <- function(D, type) {
   make_links <- function(ids, type) {
     link <- switch(type,
       drugbank = "https://www.drugbank.ca/drugs/%s",
       ttd = "https://db.idrblab.org/ttd/drug/%s",
-      pubchem = "https://pubchem.ncbi.nlm.nih.gov/compound/%s",
-      mirtarbase = "http://mirtarbase.mbc.nctu.edu.tw/php/detail.php?mirtid=%s"
+      pubchem_cid = "https://pubchem.ncbi.nlm.nih.gov/compound/%s",
+      pubchem_sid = "https://pubchem.ncbi.nlm.nih.gov/substance/%s",
+      mirtarbase = "http://mirtarbase.mbc.nctu.edu.tw/php/detail.php?mirtid=%s",
+      pubmed = "https://www.ncbi.nlm.nih.gov/pubmed/?term=%s",
+      kegg_drug = "http://www.genome.jp/dbget-bin/www_bget?%s"
     )
     fmt <- sprintf("<a href=\"%s\" target=_blank>%%s</a>", link)
     sapply(ids, function(x) if(is.na(x)) NA else sprintf(fmt, x, x))
   }
+  
+  make_links_list <- function(ids, type) {
+    sapply(ids, function(x) {
+      if(is.na(x)) NA
+      else {
+        y <- unlist(strsplit(x, ","))
+        paste(make_links(y, type), collapse=", ")
+      }
+    })
+  }
 
   if(type == "drugbank") {
-    D[[1]] <- make_links(D[[1]], "drugbank")
+    D[[2]] <- make_links(D[[2]], "drugbank")
+    D[[4]] <- make_links(D[[4]], "pubchem_cid")
+    D[[5]] <- make_links(D[[5]], "pubchem_sid")
+    D[[6]] <- make_links(D[[6]], "kegg_drug")
   } else if(type == "ttd") {
-    D[[1]] <- make_links(D[[1]], "ttd")
-    D[[4]] <- make_links(D[[4]], "pubchem")
+    D[[2]] <- make_links(D[[2]], "ttd")
+    D[[4]] <- make_links(D[[4]], "pubchem_cid")
+    D[[5]] <- make_links_list(D[[5]], "pubchem_sid")
   } else if(type == "mirtarbase") {
     D[[1]] <- make_links(D[[1]], "mirtarbase")
-    D[[4]] <- sapply(D[[4]], get_pubmed_links)
+    D[[4]] <- make_links_list(D[[4]], "pubmed")
   }
   return(D)
 }
 
 get_targets_network <- function(targets, show_symbols) {
-  gene_col <- which(colnames(targets) == "gene")
-  edges <- targets[,c(1,gene_col)]
+  edges <- targets[,1:2]
   colnames(edges) <- c("from","to")
 
   from_nodes <- unique(edges$from)
+  from_labels <- if(show_symbols) map_ids_fallback(from_nodes, "SYMBOL", "ENTREZID") else from_nodes
   to_nodes <- unique(edges$to)
-  to_labels <- if(show_symbols) map_ids_fallback(to_nodes, "SYMBOL", "ENTREZID") else to_nodes
 
   nodes <- data.frame(
     id = c(from_nodes, to_nodes),
-    label = c(from_nodes, to_labels),
-    color.background = c(rep("lightblue", length(from_nodes)), rep("#f18484", length(to_nodes))),
+    label = c(from_labels, to_nodes),
+    color.background = c(rep("#f18484", length(from_nodes)), rep("lightblue", length(to_nodes))),
     stringsAsFactors = FALSE
   )
 
