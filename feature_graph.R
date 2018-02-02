@@ -2,7 +2,7 @@ library(visNetwork)
 library(circlize)
 
 feature_graph <- function(D, edges, features, labels, groups) {
-  nodes <- data.frame(id=features, label=labels, color.border="black")
+  nodes <- data.frame(id=features, label=labels)
   legend <- NULL
   footer <- NULL
   group_levels <- levels(as.factor(groups))
@@ -13,6 +13,9 @@ feature_graph <- function(D, edges, features, labels, groups) {
     col_ramp <- colorRamp2(c(-1,0,1), c("magenta","white","green"))
     colors <- col_ramp(means[[1]] - means[[2]])
     nodes$color.background <- colors
+    nodes$color.border <- "black"
+    nodes$color.highlight.background <- colors
+    nodes$color.highlight.border <- "black"
     
     footer <- paste0("Node color is mean(", group_levels[1], ") - mean(", group_levels[2], ")")
     legend_values <- c(-1, -0.5, 0, 0.5, 1.0)
