@@ -21,7 +21,7 @@ make_links_list <- function(ids, type) {
     if(is.na(x)) NA
     else {
       y <- unlist(strsplit(x, ","))
-      paste(make_gene_target_links(y, type), collapse=", ")
+      paste(make_links(y, type), collapse=", ")
     }
   })
 }
