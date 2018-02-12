@@ -16,11 +16,11 @@ make_links <- function(ids, type) {
   sapply(ids, function(x) if(is.na(x)) NA else sprintf(fmt, x, x))
 }
 
-make_links_list <- function(ids, type) {
+make_links_list <- function(ids, type, separator=",") {
   sapply(ids, function(x) {
     if(is.na(x)) NA
     else {
-      y <- unlist(strsplit(x, ","))
+      y <- unlist(strsplit(x, separator))
       paste(make_links(y, type), collapse=", ")
     }
   })
