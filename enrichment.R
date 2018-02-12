@@ -33,11 +33,12 @@ gene_set_enrichment <- function(genes, universe, type, pvalueCutoff, qvalueCutof
 
 get_gene_set_enrichment_links <- function(D, type) {
   if(type == "gobp" || type == "gomf" || type == "gocc") {
-    D[[1]] <- make_links(D[[1]], "amigo")
+    D$ID <- make_links(D$ID, "amigo")
   } else if(type == "reactome") {
-    D[[1]] <- make_links(D[[1]], "reactome")
+    D$ID <- make_links(D$ID, "reactome")
   } else if(type == "do") {
-    D[[1]] <- make_links(D[[1]], "do")
+    D$ID <- make_links(D$ID, "do")
   }
+  D$geneID <- make_links_list(D$geneID, "ncbi_gene", "/", "/")
   return(D)
 }

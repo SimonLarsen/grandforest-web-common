@@ -2,16 +2,6 @@ library(visNetwork)
 source("grandforest-web-common/mapping.R")
 source("grandforest-web-common/make_links.R")
 
-get_gene_targets <- function(genes, type) {
-  if(type == "drugbank") {
-    subset(readRDS("grandforest-web-common/data/drugbank.rds"), gene %in% genes)
-  } else if(type == "ttd") {
-    subset(readRDS("grandforest-web-common/data/ttd.rds"), gene %in% genes)
-  } else if(type == "mirtarbase") {
-    subset(readRDS("grandforest-web-common/data/mirtarbase.human.rds"), gene %in% genes)
-  }
-}
-
 gene_target_sources <- function() {
   list(
     "DrugBank 5.0.11 (drugs)" = "drugbank",
@@ -20,25 +10,46 @@ gene_target_sources <- function() {
   )
 }
 
+get_gene_targets <- function(genes, type) {
+  subset(readRDS(sprintf("grandforest-web-common/data/%s.rds", type)), gene %in% genes)
+}
+
+get_gene_target_counts <- function(type) {
+  readRDS(sprintf("grandforest-web-common/data/%s.count.rds", type))
+}
+
 get_gene_target_links <- function(D, type) {
-  D[[1]] <- make_links(D[[1]], "ncbi_gene")
+  D[["targets"]] <- make_links_list(D[["targets"]], "ncbi_gene", "/", "/")
   if(type == "drugbank") {
-    D[[3]] <- make_links(D[[3]], "drugbank")
-    D[[5]] <- make_links(D[[5]], "pubchem_cid")
-    D[[6]] <- make_links(D[[6]], "pubchem_sid")
-    D[[7]] <- make_links(D[[7]], "kegg_drug")
+    D[[1]] <- make_links(D[[1]], "drugbank")
   } else if(type == "ttd") {
-    D[[3]] <- make_links(D[[3]], "ttd")
-    D[[5]] <- make_links(D[[5]], "pubchem_cid")
-    D[[6]] <- make_links_list(D[[6]], "pubchem_sid")
+    D[[1]] <- make_links(D[[1]], "ttd")
   } else if(type == "mirtarbase") {
-    D[[3]] <- make_links(D[[3]], "mirtarbase")
-    D[[5]] <- make_links_list(D[[5]], "pubmed")
+    D[[1]] <- make_links(D[[1]], "mirtarbase")
   }
   return(D)
 }
 
-get_targets_network <- function(targets, type, show_symbols) {
+get_gene_targets_table <- function(targets, type) {
+  targets <- split(targets, targets[,3])
+  counts <- get_gene_target_counts(type)
+  
+  out <- do.call(rbind, lapply(targets, function(x) {
+    data.frame(
+      x[1,3:ncol(x)],
+      targets = paste0(x[,1], collapse="/"),
+      count = nrow(x),
+      ratio = paste0(nrow(x), "/", counts[x[1,3]]),
+      check.names = FALSE,
+      stringsAsFactors = FALSE
+    )
+  }))
+  
+  out <- get_gene_target_links(out, type)
+  out[order(out$count, decreasing=TRUE),] # sort by target count
+}
+
+get_gene_targets_network <- function(targets, type, show_symbols) {
   # make from node table
   from_nodes <- setNames(targets[,c(3,3,4)], c("id","label","title"))
   from_nodes <- from_nodes[!duplicated(from_nodes$id),]
