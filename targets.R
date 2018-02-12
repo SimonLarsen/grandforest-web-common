@@ -1,5 +1,6 @@
 library(visNetwork)
 source("grandforest-web-common/mapping.R")
+source("grandforest-web-common/make_links.R")
 
 get_gene_targets <- function(genes, type) {
   if(type == "drugbank") {
@@ -20,65 +21,46 @@ gene_target_sources <- function() {
 }
 
 get_gene_target_links <- function(D, type) {
-  make_links <- function(ids, type) {
-    link <- switch(type,
-      drugbank = "https://www.drugbank.ca/drugs/%s",
-      ttd = "https://db.idrblab.org/ttd/drug/%s",
-      pubchem_cid = "https://pubchem.ncbi.nlm.nih.gov/compound/%s",
-      pubchem_sid = "https://pubchem.ncbi.nlm.nih.gov/substance/%s",
-      mirtarbase = "http://mirtarbase.mbc.nctu.edu.tw/php/detail.php?mirtid=%s",
-      pubmed = "https://www.ncbi.nlm.nih.gov/pubmed/?term=%s",
-      kegg_drug = "http://www.genome.jp/dbget-bin/www_bget?%s"
-    )
-    fmt <- sprintf("<a href=\"%s\" target=_blank>%%s</a>", link)
-    sapply(ids, function(x) if(is.na(x)) NA else sprintf(fmt, x, x))
-  }
-  
-  make_links_list <- function(ids, type) {
-    sapply(ids, function(x) {
-      if(is.na(x)) NA
-      else {
-        y <- unlist(strsplit(x, ","))
-        paste(make_links(y, type), collapse=", ")
-      }
-    })
-  }
-
+  D[[1]] <- make_links(D[[1]], "ncbi_gene")
   if(type == "drugbank") {
-    D[[2]] <- make_links(D[[2]], "drugbank")
-    D[[4]] <- make_links(D[[4]], "pubchem_cid")
-    D[[5]] <- make_links(D[[5]], "pubchem_sid")
-    D[[6]] <- make_links(D[[6]], "kegg_drug")
+    D[[3]] <- make_links(D[[3]], "drugbank")
+    D[[5]] <- make_links(D[[5]], "pubchem_cid")
+    D[[6]] <- make_links(D[[6]], "pubchem_sid")
+    D[[7]] <- make_links(D[[7]], "kegg_drug")
   } else if(type == "ttd") {
-    D[[2]] <- make_links(D[[2]], "ttd")
-    D[[4]] <- make_links(D[[4]], "pubchem_cid")
-    D[[5]] <- make_links_list(D[[5]], "pubchem_sid")
+    D[[3]] <- make_links(D[[3]], "ttd")
+    D[[5]] <- make_links(D[[5]], "pubchem_cid")
+    D[[6]] <- make_links_list(D[[6]], "pubchem_sid")
   } else if(type == "mirtarbase") {
-    D[[2]] <- make_links(D[[2]], "mirtarbase")
-    D[[4]] <- make_links_list(D[[4]], "pubmed")
+    D[[3]] <- make_links(D[[3]], "mirtarbase")
+    D[[5]] <- make_links_list(D[[5]], "pubmed")
   }
   return(D)
 }
 
-get_targets_network <- function(targets, show_symbols) {
-  edges <- targets[,1:2]
-  colnames(edges) <- c("from","to")
+get_targets_network <- function(targets, type, show_symbols) {
+  # make from node table
+  from_nodes <- setNames(targets[,c(3,3,4)], c("id","label","title"))
+  from_nodes <- from_nodes[!duplicated(from_nodes$id),]
+  from_nodes$title <- paste0(make_links(from_nodes$id, type), "<br>", from_nodes$title)
+  from_nodes$color.background <- "lightblue"
 
-  from_nodes <- unique(edges$from)
-  from_labels <- if(show_symbols) map_ids_fallback(from_nodes, "SYMBOL", "ENTREZID") else from_nodes
-  to_nodes <- unique(edges$to)
+  # make to node table (genes)
+  to_nodes <- setNames(targets[,c(1,2)], c("id","title"))
+  to_nodes <- to_nodes[!duplicated(to_nodes$id),]
+  to_nodes$label <- if(show_symbols) to_nodes$title else to_nodes$id
+  to_nodes$title <- paste0(make_links(to_nodes$id, "ncbi_gene"), "<br>", to_nodes$title)
+  to_nodes$color.background <- "#f18484"
 
-  nodes <- data.frame(
-    id = c(from_nodes, to_nodes),
-    label = c(from_labels, to_nodes),
-    color.background = c(rep("#f18484", length(from_nodes)), rep("lightblue", length(to_nodes))),
-    stringsAsFactors = FALSE
-  )
+  nodes <- rbind(from_nodes, to_nodes)
 
   validate(need(
     nrow(nodes) <= MAX_TARGET_NETWORK_NODES,
     sprintf("Gene target network not supported for > %d nodes.", MAX_TARGET_NETWORK_NODES)
   ))
+
+  # get edges
+  edges <- setNames(targets[,c(1,3)], c("from","to"))
 
   visNetwork(nodes, edges) %>%
     visNodes(shape = "ellipse") %>%
