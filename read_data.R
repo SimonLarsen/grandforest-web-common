@@ -4,6 +4,8 @@ read_expression_file <- function(path) {
   lpath <- tolower(path)
   if(endsWith(lpath, ".zip")) {
     fread(paste0("unzip -cq ", path), header=TRUE)
+  } else if(endsWith(lpath, ".gz") || endsWith(lpath, ".gzip")) {
+    fread(paste0("zcat ", path), header=TRUE)
   } else if(endsWith(lpath, ".rds")) {
     out <- readRDS(path)
     if(!(class(out)[1] %in% c("data.frame","data.table"))) {
