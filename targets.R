@@ -1,4 +1,3 @@
-library(visNetwork)
 source("grandforest-web-common/mapping.R")
 source("grandforest-web-common/make_links.R")
 
@@ -50,6 +49,7 @@ get_gene_targets_table <- function(targets, type) {
 }
 
 get_gene_targets_network <- function(targets, type, show_symbols) {
+  library(visNetwork)
   # make from node table
   from_nodes <- setNames(targets[,c(3,3,4)], c("id","label","title"))
   from_nodes <- from_nodes[!duplicated(from_nodes$id),]

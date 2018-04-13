@@ -1,6 +1,3 @@
-library(visNetwork)
-library(circlize)
-
 feature_graph <- function(D, edges, features, labels, groups) {
   nodes <- data.frame(id=features, label=labels)
   legend <- NULL
@@ -10,7 +7,7 @@ feature_graph <- function(D, edges, features, labels, groups) {
 
   if(length(group_levels) == 2) {
     means <- lapply(split(D, groups), colMeans)
-    col_ramp <- colorRamp2(c(-1,0,1), c("magenta","white","green"))
+    col_ramp <- circlize::colorRamp2(c(-1,0,1), c("magenta","white","green"))
     colors <- col_ramp(means[[1]] - means[[2]])
     nodes$color.background <- colors
     nodes$color.border <- "black"
@@ -25,6 +22,7 @@ feature_graph <- function(D, edges, features, labels, groups) {
   
   edges <- subset(edges, from %in% features & to %in% features)
 
+  library(visNetwork)
   net <- visNetwork(nodes, edges, footer=footer) %>%
     visNodes(shape = "ellipse") %>%
     visEdges(smooth = FALSE, color = list(color = "lightblue", highlight="black")) %>%
