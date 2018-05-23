@@ -30,9 +30,20 @@ get_gene_target_links <- function(D, type) {
 }
 
 get_gene_targets_table <- function(targets, type) {
+  if(nrow(targets) == 0) {
+    return(data.frame(
+      targets[,3:ncol(targets)],
+      targets = character(),
+      count = numeric(),
+      ratio = character(),
+      check.names = FALSE,
+      stringsAsFactors = FALSE
+    ))
+  }
+
   targets <- split(targets, targets[,3])
   counts <- get_gene_target_counts(type)
-  
+
   out <- do.call(rbind, lapply(targets, function(x) {
     data.frame(
       x[1,3:ncol(x)],
@@ -43,7 +54,7 @@ get_gene_targets_table <- function(targets, type) {
       stringsAsFactors = FALSE
     )
   }))
-  
+
   out <- get_gene_target_links(out, type)
   out[order(out$count, decreasing=TRUE),] # sort by target count
 }
