@@ -9,12 +9,52 @@ gene_target_sources <- function() {
   )
 }
 
-get_gene_targets <- function(genes, type) {
-  subset(readRDS(sprintf("grandforest-web-common/data/%s.rds", type)), gene %in% genes)
-}
+#get_gene_targets <- function(genes, type) {
+#  subset(readRDS(sprintf("grandforest-web-common/data/%s.rds", type)), gene %in% genes)
+#}
 
-get_gene_target_counts <- function(type) {
-  readRDS(sprintf("grandforest-web-common/data/%s.count.rds", type))
+get_gene_targets <- function(genes, type, filter_results, pvalueCutoff=1, qvalueCutoff=1) {
+  D <- readRDS(sprintf("grandforest-web-common/data/%s.rds", type))
+  sets <- split(D[,1], D[,3])
+  usize <- length(unique(D[,1]))
+  
+  overlap <- lapply(sets, intersect, genes)
+  hit <- lengths(overlap)
+  size <- lengths(sets)
+  gsize <- length(genes)
+  
+  pvalue <- mapply(function(hit, size, usize) {
+    phyper(hit-1, size, usize-size, gsize, lower.tail=FALSE)
+  }, hit, size, usize)
+  
+  padj <- p.adjust(pvalue, method="BH")
+  
+  q <- tryCatch(qvalue(pvalue)$qvalues, error=function(e) NA)
+  
+  keep <- hit > 0
+  if(filter_results) {
+    keep <- keep & pvalue <= pvalueCutoff
+    if(!any(is.na(q))) {
+      keep <- keep & q <= qvalueCutoff
+    }
+  }
+  
+  sourcemap <- unique(D[,3:4])
+  sourcemap <- setNames(sourcemap[,2], sourcemap[,1])
+  
+  out <- data.table(
+    names(overlap),
+    sourcemap[names(overlap)],
+    targets = overlap,
+    pvalue = pvalue,
+    p.adjust = padj,
+    qvalue = q,
+    check.names = FALSE,
+    stringsAsFactors = FALSE
+  )
+  colnames(out)[1:2] <- colnames(D)[3:4]
+  
+  out[keep,]
 }
 
 get_gene_target_links <- function(D, type) {
@@ -29,46 +69,26 @@ get_gene_target_links <- function(D, type) {
   return(D)
 }
 
-get_gene_targets_table <- function(targets, type) {
-  if(nrow(targets) == 0) {
-    return(data.frame(
-      targets[,3:ncol(targets)],
-      targets = character(),
-      count = numeric(),
-      ratio = character(),
-      check.names = FALSE,
-      stringsAsFactors = FALSE
-    ))
-  }
-
-  targets <- split(targets, targets[,3])
-  counts <- get_gene_target_counts(type)
-
-  out <- do.call(rbind, lapply(targets, function(x) {
-    data.frame(
-      x[1,3:ncol(x)],
-      targets = paste0(x[,1], collapse="/"),
-      count = nrow(x),
-      ratio = paste0(nrow(x), "/", counts[x[1,3]]),
-      check.names = FALSE,
-      stringsAsFactors = FALSE
-    )
-  }))
-
+get_gene_targets_table <- function(targets) {
+  out <- targets
+  out$targets <- sapply(out$targets, paste0, collapse="/")
   out <- get_gene_target_links(out, type)
-  out[order(out$count, decreasing=TRUE),] # sort by target count
+  out[order(out$pvalue, decreasing=FALSE),] # sort by target count
 }
 
-get_gene_targets_network <- function(targets, type, show_symbols) {
+get_gene_targets_network <- function(targets, type, show_symbols, species) {
   library(visNetwork)
+  saveRDS(targets, file="~/targets.rds")
   # make from node table
-  from_nodes <- setNames(targets[,c(3,3,4)], c("id","label","title"))
+  targets <- tidyr::unnest(targets[,1:3], targets)
+  
+  from_nodes <- setNames(targets[,c(1,1,2)], c("id","label","title"))
   from_nodes <- from_nodes[!duplicated(from_nodes$id),]
   from_nodes$title <- paste0(make_links(from_nodes$id, type), "<br>", from_nodes$title)
   from_nodes$color.background <- "lightblue"
 
   # make to node table (genes)
-  to_nodes <- setNames(targets[,c(1,2)], c("id","title"))
+  to_nodes <- data.frame(id=targets$targets, title=map_ids_fallback(targets$targets, "SYMBOL", "ENTREZID", species))
   to_nodes <- to_nodes[!duplicated(to_nodes$id),]
   to_nodes$label <- if(show_symbols) to_nodes$title else to_nodes$id
   to_nodes$title <- paste0(make_links(to_nodes$id, "ncbi_gene"), "<br>", to_nodes$title)
@@ -86,6 +106,6 @@ get_gene_targets_network <- function(targets, type, show_symbols) {
 
   visNetwork(nodes, edges) %>%
     visNodes(shape = "ellipse") %>%
-    visEdges(smooth = FALSE, arrows="from") %>%
+    visEdges(smooth = FALSE, arrows="to") %>%
     visIgraphLayout()
 }
