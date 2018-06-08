@@ -22,14 +22,16 @@ get_network_options <- function(species) {
       "IID, incl. predictions (2018-05)" = "human.iid.all",
       "BioGRID (3.4.160)" = "human.biogrid",
       "HTRIdb (2018-05)" = "human.htri",
-      "RegNetwork (2018-05)" = "human.regnetwork"
+      "RegNetwork (2018-05)" = "human.regnetwork",
+      "Custom network (upload)" = "custom"
     )
   } else if(species == "mouse") {
     list(
       "IID, experimental only (2018-05)" = "mouse.iid.exp",
       "IID, incl. predictions (2018-05)" = "mouse.iid.all",
       "BioGRID (3.4.160)" = "mouse.biogrid",
-      "RegNetwork (2018-05)" = "mouse.regnetwork"
+      "RegNetwork (2018-05)" = "mouse.regnetwork",
+      "Custom network (upload)" = "custom"
     )
   }
 }
