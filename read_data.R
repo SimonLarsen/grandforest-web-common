@@ -36,7 +36,7 @@ read_network_file <- function(path) {
       stop("Network RDS file does not contain a `data.frame` or `data.table` object.")
     }
   } else {
-    out <- fread(path, header=FALSE, colClasses="character")
+    out <- fread(path, header=TRUE, colClasses="character")
   }
   if(ncol(out) < 2) {
     stop("Network file does not contain at least two columns.")
