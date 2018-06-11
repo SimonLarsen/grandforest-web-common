@@ -8,6 +8,7 @@ make_links <- function(ids, type) {
     ttd = "https://db.idrblab.org/ttd/drug/%s",
     pubchem_cid = "https://pubchem.ncbi.nlm.nih.gov/compound/%s",
     pubchem_sid = "https://pubchem.ncbi.nlm.nih.gov/substance/%s",
+    mirbase = "http://www.mirbase.org/cgi-bin/mirna_entry.pl?acc=%s",
     mirtarbase = "http://mirtarbase.mbc.nctu.edu.tw/php/detail.php?mirtid=%s",
     pubmed = "https://www.ncbi.nlm.nih.gov/pubmed/?term=%s",
     kegg_drug = "http://www.genome.jp/dbget-bin/www_bget?%s"
